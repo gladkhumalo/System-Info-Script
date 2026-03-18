@@ -4,9 +4,6 @@ Collects system information from a Windows machine.
 
 .DESCRIPTION
 Retrieves CPU, RAM, disk, OS, network info, and uptime.
-
-.AUTHOR
-Glad Khumalo
 #>
 
 Write-Host "===== SYSTEM INFORMATION =====" -ForegroundColor Cyan
