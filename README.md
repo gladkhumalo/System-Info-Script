@@ -63,6 +63,12 @@ Disk: 120GB Free / 256GB Total
 Uptime: 5 days
 ```
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="doc/System-info.png">
+  <source media="(prefers-color-scheme: light)" srcset="doc/System-info.png">
+  <img alt="System Information" src="doc/System-info.png">
+</picture>
+
 ---
 
 ## 🧠 Concepts Demonstrated
