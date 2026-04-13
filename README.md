@@ -90,13 +90,3 @@ This script can be used in:
 * Build a GUI version
 
 ---
-
-## 👤 Author
-
-Glad Khumalo
-
----
-
-## ⭐️ Acknowledgements
-
-This project is part of my PowerShell learning journey as I transition into Cloud Engineering and System Administration.
