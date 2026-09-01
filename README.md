@@ -25,6 +25,7 @@ This script retrieves:
 * 🖥️ Operating System details
 * 🌐 Network configuration
 * ⚡ System uptime
+* 📄 Optional JSON report export
 
 ---
 
@@ -49,6 +50,14 @@ This script retrieves:
    .\SystemInfo.ps1
    ```
 
+### Export results to JSON
+
+Use `-ExportPath` to save the collected system information to a JSON file:
+
+```powershell
+.\SystemInfo.ps1 -ExportPath .\SystemInfo.json
+```
+
 ---
 
 ## 📸 Example Output
@@ -67,6 +76,7 @@ This script retrieves:
 * Command usage
 * System queries using `Get-CimInstance`
 * Output formatting
+* Parameters and JSON export
 
 ---
 
@@ -83,7 +93,6 @@ This script can be used in:
 
 ## 📈 Future Improvements
 
-* Export results to a file (CSV/JSON)
 * Add remote computer support
 * Include GPU information
 * Build a GUI version
