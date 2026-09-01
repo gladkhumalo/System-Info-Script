@@ -4,7 +4,16 @@ Collects system information from a Windows machine.
 
 .DESCRIPTION
 Retrieves CPU, RAM, disk, OS, network info, and uptime.
+Optionally exports the collected report to a JSON file.
+
+.PARAMETER ExportPath
+Optional path where the JSON report will be saved.
 #>
+
+[CmdletBinding()]
+param(
+    [string]$ExportPath
+)
 
 Write-Host "===== SYSTEM INFORMATION =====" -ForegroundColor Cyan
 
@@ -19,7 +28,7 @@ Write-Host "Version: $($OS.Version)"
 
 # CPU Info
 $CPU = Get-CimInstance Win32_Processor
-Write-Host "`nCPU: $($CPU.Name)"
+Write-Host "`nCPU: $($CPU.Name -join ', ')"
 
 # RAM Info
 $TotalRAM = [math]::Round($OS.TotalVisibleMemorySize / 1MB, 2)
@@ -50,5 +59,40 @@ foreach ($ipaddr in $IP) {
 # System Uptime
 $Uptime = (Get-Date) - $OS.LastBootUpTime
 Write-Host "`nSystem Uptime: $($Uptime.Days) days, $($Uptime.Hours) hours"
+
+$Report = [pscustomobject]@{
+    ComputerName    = $ComputerName
+    OperatingSystem = [pscustomobject]@{
+        Name    = $OS.Caption
+        Version = $OS.Version
+    }
+    CPU             = @($CPU.Name)
+    Memory          = [pscustomobject]@{
+        TotalGB = $TotalRAM
+        FreeGB  = $FreeRAM
+    }
+    Disks           = @($Disks | ForEach-Object {
+        [pscustomobject]@{
+            Drive   = $_.DeviceID
+            FreeGB  = [math]::Round($_.FreeSpace / 1GB, 2)
+            TotalGB = [math]::Round($_.Size / 1GB, 2)
+        }
+    })
+    NetworkAddresses = @($IP | ForEach-Object {
+        [pscustomobject]@{
+            Address       = $_.IPAddress
+            InterfaceName = $_.InterfaceAlias
+        }
+    })
+    Uptime          = [pscustomobject]@{
+        Days  = $Uptime.Days
+        Hours = $Uptime.Hours
+    }
+}
+
+if ($ExportPath) {
+    $Report | ConvertTo-Json -Depth 4 | Set-Content -Path $ExportPath -Encoding utf8
+    Write-Host "Report exported to: $ExportPath" -ForegroundColor Green
+}
 
 Write-Host "`n===== END OF REPORT =====" -ForegroundColor Cyan
