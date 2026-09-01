@@ -31,14 +31,13 @@ This script retrieves:
 ## 🧪 Technologies Used
 
 * PowerShell
-* Windows Management Instrumentation (WMI)
 * CIM (Common Information Model)
 
 ---
 
 ## 🚀 How to Run
 
-1. Open PowerShell as Administrator
+1. Open PowerShell
 2. Navigate to the script directory:
 
    ```powershell
