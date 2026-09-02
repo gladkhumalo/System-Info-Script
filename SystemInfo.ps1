@@ -12,6 +12,7 @@ Optional path where the JSON report will be saved.
 
 [CmdletBinding()]
 param(
+    [ValidateNotNullOrEmpty()]
     [string]$ExportPath
 )
 
@@ -22,12 +23,12 @@ $ComputerName = $env:COMPUTERNAME
 Write-Host "`nComputer Name: $ComputerName"
 
 # Operating System
-$OS = Get-CimInstance Win32_OperatingSystem
+$OS = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
 Write-Host "OS: $($OS.Caption)"
 Write-Host "Version: $($OS.Version)"
 
 # CPU Info
-$CPU = Get-CimInstance Win32_Processor
+$CPU = Get-CimInstance Win32_Processor -ErrorAction Stop
 Write-Host "`nCPU: $($CPU.Name -join ', ')"
 
 # RAM Info
@@ -39,7 +40,7 @@ Write-Host "Free RAM: $FreeRAM GB"
 
 # Disk Info
 Write-Host "`nDisk Information:"
-$Disks = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3"
+$Disks = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction Stop
 
 foreach ($disk in $Disks) {
     $FreeSpace = [math]::Round($disk.FreeSpace / 1GB, 2)
@@ -50,7 +51,8 @@ foreach ($disk in $Disks) {
 
 # Network Info
 Write-Host "`nNetwork Information:"
-$IP = Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike "169.*" }
+$IP = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction Stop |
+    Where-Object { $_.IPAddress -notlike "169.254.*" -and $_.IPAddress -ne "127.0.0.1" }
 
 foreach ($ipaddr in $IP) {
     Write-Host "IP Address: $($ipaddr.IPAddress)"
@@ -91,8 +93,13 @@ $Report = [pscustomobject]@{
 }
 
 if ($ExportPath) {
-    $Report | ConvertTo-Json -Depth 4 | Set-Content -Path $ExportPath -Encoding utf8
-    Write-Host "Report exported to: $ExportPath" -ForegroundColor Green
+    try {
+        $Report | ConvertTo-Json -Depth 4 | Set-Content -Path $ExportPath -Encoding utf8 -ErrorAction Stop
+        Write-Host "Report exported to: $ExportPath" -ForegroundColor Green
+    }
+    catch {
+        Write-Error "Unable to export the report to '$ExportPath': $($_.Exception.Message)"
+    }
 }
 
 Write-Host "`n===== END OF REPORT =====" -ForegroundColor Cyan

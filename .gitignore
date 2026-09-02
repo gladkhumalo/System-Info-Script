@@ -1,0 +1,7 @@
+# Generated reports may contain machine and network information.
+SystemInfo.json
+*.report.json
+
+# PowerShell test and analysis output
+TestResults/
+*.clixml

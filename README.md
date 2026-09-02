@@ -38,6 +38,12 @@ This script retrieves:
 
 ## 🚀 How to Run
 
+### Requirements
+
+- Windows 10, Windows 11, or Windows Server
+- Windows PowerShell 5.1 or PowerShell 7
+- Permission to query local system information
+
 1. Open PowerShell
 2. Navigate to the script directory:
 
@@ -96,5 +102,19 @@ This script can be used in:
 * Add remote computer support
 * Include GPU information
 * Build a GUI version
+
+---
+
+## ✅ Quality checks
+
+Every push and pull request to `main` runs PSScriptAnalyzer through GitHub Actions. This catches common PowerShell quality problems before changes are merged.
+
+## 🤝 Contributing
+
+Issues and pull requests are welcome. Create a focused branch, explain the reason for your change, and describe how you tested it. Please do not include exported system reports because they may contain device or network information.
+
+## 📄 License
+
+Licensed under the [MIT License](LICENSE).
 
 ---
