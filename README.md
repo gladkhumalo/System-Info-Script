@@ -1,120 +1,130 @@
-# 🖥️ System Information Script (PowerShell)
+# Windows System Information
 
-## 📌 Overview
+[![PowerShell quality](https://github.com/gladkhumalo/System-Info-Script/actions/workflows/powershell-quality.yml/badge.svg)](https://github.com/gladkhumalo/System-Info-Script/actions/workflows/powershell-quality.yml)
+[![Release](https://img.shields.io/github/v/release/gladkhumalo/System-Info-Script)](https://github.com/gladkhumalo/System-Info-Script/releases)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-This PowerShell script collects and displays essential system information from a Windows machine.
-It is designed to help IT support technicians and system administrators quickly assess system health and configuration.
+A tested PowerShell tool that collects essential information from a local Windows computer, displays a readable summary, and optionally exports structured JSON.
 
----
+## Features
 
-## 🎯 Purpose
+- Operating-system name and version
+- Processor information
+- Total and available memory
+- Fixed-disk capacity and free space
+- Active IPv4 addresses, excluding loopback and APIPA addresses
+- System uptime
+- Structured pipeline output
+- Optional JSON export
+- Automated analysis and Pester tests on PowerShell 7 and Windows PowerShell 5.1
 
-* Automate system information gathering
-* Reduce manual troubleshooting time
-* Provide quick insights into machine specifications
-
----
-
-## ⚙️ Features
-
-This script retrieves:
-
-* 🧠 CPU information
-* 💾 RAM usage and total memory
-* 🗄️ Disk space usage
-* 🖥️ Operating System details
-* 🌐 Network configuration
-* ⚡ System uptime
-* 📄 Optional JSON report export
-
----
-
-## 🧪 Technologies Used
-
-* PowerShell
-* CIM (Common Information Model)
-
----
-
-## 🚀 How to Run
-
-### Requirements
+## Requirements
 
 - Windows 10, Windows 11, or Windows Server
 - Windows PowerShell 5.1 or PowerShell 7
 - Permission to query local system information
 
-1. Open PowerShell
-2. Navigate to the script directory:
+## Quick start
 
-   ```powershell
-   cd path\to\your\script
-   ```
-3. Run the script:
+Clone the repository and enter its directory:
 
-   ```powershell
-   .\SystemInfo.ps1
-   ```
+```powershell
+git clone https://github.com/gladkhumalo/System-Info-Script.git
+Set-Location System-Info-Script
+```
 
-### Export results to JSON
+Display the local system summary:
 
-Use `-ExportPath` to save the collected system information to a JSON file:
+```powershell
+.\SystemInfo.ps1
+```
+
+Export the report to JSON:
 
 ```powershell
 .\SystemInfo.ps1 -ExportPath .\SystemInfo.json
 ```
 
----
+Return a reusable PowerShell object:
 
-## 📸 Example Output
+```powershell
+$report = .\SystemInfo.ps1 -PassThru
+$report.Disks | Sort-Object FreeGB
+```
+
+## Use the module directly
+
+```powershell
+Import-Module .\src\SystemInfo.psd1
+
+$report = Get-SystemInfo
+$report | Export-SystemInfoReport -Path .\SystemInfo.json
+```
+
+`Get-SystemInfo` returns objects instead of preformatted text, so its results can be filtered, sorted, exported, tested, or passed into other automation.
+
+## Example output
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="doc/System-info.png">
   <source media="(prefers-color-scheme: light)" srcset="doc/System-info.png">
-  <img alt="System Information" src="doc/System-info.png">
+  <img alt="System Information report displayed in PowerShell" src="doc/System-info.png">
 </picture>
 
----
+## Project structure
 
-## 🧠 Concepts Demonstrated
+```text
+.
+├── .github/                  # Actions workflow and contribution templates
+├── doc/                      # Documentation images
+├── src/
+│   ├── SystemInfo.psd1       # Module manifest and version
+│   └── SystemInfo.psm1       # Reusable commands
+├── tests/
+│   └── SystemInfo.Tests.ps1  # Pester unit tests
+├── SystemInfo.ps1            # Friendly command-line entry point
+├── CHANGELOG.md
+├── LICENSE
+└── SECURITY.md
+```
 
-* Variables
-* Command usage
-* System queries using `Get-CimInstance`
-* Output formatting
-* Parameters and JSON export
+## Testing locally
 
----
+Install the development tools once:
 
-## 🔐 Use Case
+```powershell
+Install-Module Pester -MinimumVersion 5.5.0 -Scope CurrentUser
+Install-Module PSScriptAnalyzer -Scope CurrentUser
+```
 
-This script can be used in:
+Run the tests and static analysis:
 
-* IT Support troubleshooting
-* System audits
-* Pre-deployment checks
-* Helpdesk diagnostics
+```powershell
+Invoke-Pester -Path .\tests -Output Detailed
+Get-ChildItem -Path . -Recurse -File |
+    Where-Object Extension -in '.ps1', '.psm1', '.psd1' |
+    Invoke-ScriptAnalyzer
+```
 
----
+GitHub Actions runs equivalent checks for every pull request and every push to `main`.
 
-## 📈 Future Improvements
+## Security and privacy
 
-* Add remote computer support
-* Include GPU information
-* Build a GUI version
+Generated reports can contain computer names, IP addresses, operating-system details, and storage information. Review and redact reports before sharing them. Do not attach unredacted reports to public issues.
 
----
+See [SECURITY.md](SECURITY.md) for vulnerability-reporting guidance.
 
-## ✅ Quality checks
+## Roadmap
 
-Every push and pull request to `main` runs PSScriptAnalyzer through GitHub Actions. This catches common PowerShell quality problems before changes are merged.
+- Optional remote-computer support
+- GPU information
+- HTML report export
+- Additional integration tests on Windows Server
 
-## 🤝 Contributing
+## Contributing
 
-Issues and pull requests are welcome. Create a focused branch, explain the reason for your change, and describe how you tested it. Please do not include exported system reports because they may contain device or network information.
+Issues and pull requests are welcome. Create one focused branch, explain why the change is needed, and describe how you tested it. The pull-request template contains the full checklist.
 
-## 📄 License
+## License
 
 Licensed under the [MIT License](LICENSE).
-
----

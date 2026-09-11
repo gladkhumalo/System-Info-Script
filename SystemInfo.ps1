@@ -1,105 +1,82 @@
 <#
 .SYNOPSIS
-Collects system information from a Windows machine.
+Displays system information for the local Windows computer.
 
 .DESCRIPTION
-Retrieves CPU, RAM, disk, OS, network info, and uptime.
-Optionally exports the collected report to a JSON file.
+Uses the SystemInfo module to collect CPU, memory, disk, operating-system,
+network, and uptime information. The report can optionally be exported to JSON.
 
 .PARAMETER ExportPath
 Optional path where the JSON report will be saved.
+
+.PARAMETER PassThru
+Returns the structured report object to the pipeline.
+
+.EXAMPLE
+.\SystemInfo.ps1
+
+.EXAMPLE
+.\SystemInfo.ps1 -ExportPath .\SystemInfo.json
+
+.EXAMPLE
+$report = .\SystemInfo.ps1 -PassThru
 #>
 
 [CmdletBinding()]
 param(
     [ValidateNotNullOrEmpty()]
-    [string]$ExportPath
+    [string]$ExportPath,
+
+    [switch]$PassThru
 )
 
-Write-Host "===== SYSTEM INFORMATION =====" -ForegroundColor Cyan
+$modulePath = Join-Path -Path $PSScriptRoot -ChildPath 'src/SystemInfo.psd1'
+Import-Module -Name $modulePath -Force -ErrorAction Stop
 
-# Computer Name
-$ComputerName = $env:COMPUTERNAME
-Write-Host "`nComputer Name: $ComputerName"
-
-# Operating System
-$OS = Get-CimInstance Win32_OperatingSystem -ErrorAction Stop
-Write-Host "OS: $($OS.Caption)"
-Write-Host "Version: $($OS.Version)"
-
-# CPU Info
-$CPU = Get-CimInstance Win32_Processor -ErrorAction Stop
-Write-Host "`nCPU: $($CPU.Name -join ', ')"
-
-# RAM Info
-$TotalRAM = [math]::Round($OS.TotalVisibleMemorySize / 1MB, 2)
-$FreeRAM = [math]::Round($OS.FreePhysicalMemory / 1MB, 2)
-
-Write-Host "Total RAM: $TotalRAM GB"
-Write-Host "Free RAM: $FreeRAM GB"
-
-# Disk Info
-Write-Host "`nDisk Information:"
-$Disks = Get-CimInstance Win32_LogicalDisk -Filter "DriveType=3" -ErrorAction Stop
-
-foreach ($disk in $Disks) {
-    $FreeSpace = [math]::Round($disk.FreeSpace / 1GB, 2)
-    $TotalSpace = [math]::Round($disk.Size / 1GB, 2)
-
-    Write-Host "Drive $($disk.DeviceID): $FreeSpace GB free of $TotalSpace GB"
+try {
+    $report = Get-SystemInfo
+}
+catch {
+    Write-Error "Unable to collect system information: $($_.Exception.Message)"
+    return
 }
 
-# Network Info
-Write-Host "`nNetwork Information:"
-$IP = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction Stop |
-    Where-Object { $_.IPAddress -notlike "169.254.*" -and $_.IPAddress -ne "127.0.0.1" }
+if (-not $PassThru) {
+    Write-Host '===== SYSTEM INFORMATION =====' -ForegroundColor Cyan
+    Write-Host "`nComputer Name: $($report.ComputerName)"
+    Write-Host "OS: $($report.OperatingSystem.Name)"
+    Write-Host "Version: $($report.OperatingSystem.Version)"
+    Write-Host "`nCPU: $($report.CPU -join ', ')"
+    Write-Host "Total RAM: $($report.Memory.TotalGB) GB"
+    Write-Host "Free RAM: $($report.Memory.FreeGB) GB"
 
-foreach ($ipaddr in $IP) {
-    Write-Host "IP Address: $($ipaddr.IPAddress)"
-}
+    Write-Host "`nDisk Information:"
+    foreach ($disk in $report.Disks) {
+        Write-Host "Drive $($disk.Drive): $($disk.FreeGB) GB free of $($disk.TotalGB) GB"
+    }
 
-# System Uptime
-$Uptime = (Get-Date) - $OS.LastBootUpTime
-Write-Host "`nSystem Uptime: $($Uptime.Days) days, $($Uptime.Hours) hours"
+    Write-Host "`nNetwork Information:"
+    foreach ($address in $report.NetworkAddresses) {
+        Write-Host "IP Address: $($address.Address) ($($address.InterfaceName))"
+    }
 
-$Report = [pscustomobject]@{
-    ComputerName    = $ComputerName
-    OperatingSystem = [pscustomobject]@{
-        Name    = $OS.Caption
-        Version = $OS.Version
-    }
-    CPU             = @($CPU.Name)
-    Memory          = [pscustomobject]@{
-        TotalGB = $TotalRAM
-        FreeGB  = $FreeRAM
-    }
-    Disks           = @($Disks | ForEach-Object {
-        [pscustomobject]@{
-            Drive   = $_.DeviceID
-            FreeGB  = [math]::Round($_.FreeSpace / 1GB, 2)
-            TotalGB = [math]::Round($_.Size / 1GB, 2)
-        }
-    })
-    NetworkAddresses = @($IP | ForEach-Object {
-        [pscustomobject]@{
-            Address       = $_.IPAddress
-            InterfaceName = $_.InterfaceAlias
-        }
-    })
-    Uptime          = [pscustomobject]@{
-        Days  = $Uptime.Days
-        Hours = $Uptime.Hours
-    }
+    Write-Host "`nSystem Uptime: $($report.Uptime.Days) days, $($report.Uptime.Hours) hours"
 }
 
 if ($ExportPath) {
     try {
-        $Report | ConvertTo-Json -Depth 4 | Set-Content -Path $ExportPath -Encoding utf8 -ErrorAction Stop
+        $report | Export-SystemInfoReport -Path $ExportPath
         Write-Host "Report exported to: $ExportPath" -ForegroundColor Green
     }
     catch {
         Write-Error "Unable to export the report to '$ExportPath': $($_.Exception.Message)"
+        return
     }
 }
 
-Write-Host "`n===== END OF REPORT =====" -ForegroundColor Cyan
+if ($PassThru) {
+    $report
+}
+else {
+    Write-Host "`n===== END OF REPORT =====" -ForegroundColor Cyan
+}
