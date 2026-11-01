@@ -15,7 +15,7 @@ A tested PowerShell tool that collects essential information from a local Window
 - Active IPv4 addresses, excluding loopback and APIPA addresses
 - System uptime
 - Structured pipeline output
-- Optional JSON export
+- JSON export (Optional)
 - Automated analysis and Pester tests on PowerShell 7 and Windows PowerShell 5.1
 
 ## Requirements
